@@ -1,4 +1,4 @@
-Skip to content
+/*Skip to content
 This repository
 Search
 Pull requests
@@ -25,6 +25,7 @@ Show test coverage
  Highlight covered lines
 RawBlameHistory     
 166 lines (142 sloc)  5.63 KB
+*/
 import groovy.json.JsonBuilder
 
 buildscript {
@@ -55,14 +56,14 @@ group = 'com.blackducksoftware.integration'
 // Detect version
 version = '2.2.0-SNAPSHOT'
 
-apply from: 'airgap.gradle'
+//apply from: 'airgap.gradle'
 
 // BuildInfo - A json payload usable by detect for information from the build
 JsonBuilder jsonBuilder = new JsonBuilder()
 jsonBuilder { detect version }
-final def buildConfigurationFile = new File("${projectDir}/src/main/resources/buildInfo.json")
-buildConfigurationFile.delete()
-buildConfigurationFile << jsonBuilder.toPrettyString()
+//final def buildConfigurationFile = new File("${projectDir}/src/main/resources/buildInfo.json")
+//buildConfigurationFile.delete()
+//buildConfigurationFile << jsonBuilder.toPrettyString()
 
 // the override.snaphot property should be set to true for a CI build so
 // that the version is omitted from a snapshot build artifact
