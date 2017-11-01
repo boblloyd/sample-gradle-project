@@ -1,32 +1,3 @@
-Skip to content
-This repository
-Search
-Pull requests
-Issues
-Marketplace
-Explore
- @akamen
- Sign out
- Add Repo
-This repo is public and will appear on your dashboard under Open Source.
-
-Add repo and begin analysis 
- Unwatch 26
-  Star 11  Fork 12 blackducksoftware/hub-detect
- Code  Issues 2  Pull requests 0  Projects 0  Wiki  Insights  Settings
-Branch: master Find file Copy pathhub-detect/build.gradle
-2cc05ac  5 days ago
- Eric Kerwin moving all properties to DetectConfiguration
-7 contributors @JakeMathews @jrichardBD @bamandel @rottebds @akamen @ekerwin @romeara
- 
-CODE CLIMATE OPTIONS
-Show issues
-Show test coverage
- Highlight covered lines
-RawBlameHistory     
-166 lines (142 sloc)  5.63 KB
-import groovy.json.JsonBuilder
-
 buildscript {
     repositories { mavenCentral() }
 
