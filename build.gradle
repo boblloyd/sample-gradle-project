@@ -1,0 +1,190 @@
+Skip to content
+This repository
+Search
+Pull requests
+Issues
+Marketplace
+Explore
+ @akamen
+ Sign out
+ Add Repo
+This repo is public and will appear on your dashboard under Open Source.
+
+Add repo and begin analysis 
+ Unwatch 26
+  Star 11  Fork 12 blackducksoftware/hub-detect
+ Code  Issues 2  Pull requests 0  Projects 0  Wiki  Insights  Settings
+Branch: master Find file Copy pathhub-detect/build.gradle
+2cc05ac  5 days ago
+ Eric Kerwin moving all properties to DetectConfiguration
+7 contributors @JakeMathews @jrichardBD @bamandel @rottebds @akamen @ekerwin @romeara
+ 
+CODE CLIMATE OPTIONS
+Show issues
+Show test coverage
+ Highlight covered lines
+RawBlameHistory     
+166 lines (142 sloc)  5.63 KB
+import groovy.json.JsonBuilder
+
+buildscript {
+    repositories { mavenCentral() }
+
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.1'
+    }
+}
+
+plugins {
+    id 'groovy'
+    id 'eclipse'
+    id 'maven'
+    id 'signing'
+    id 'org.springframework.boot' version '1.5.2.RELEASE'
+    id 'jacoco'
+    id 'com.github.kt3k.coveralls' version '2.8.1'
+    id 'com.github.hierynomus.license' version '0.14.0'
+}
+
+tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
+tasks.withType(GroovyCompile) { options.encoding = 'UTF-8' }
+
+group = 'com.blackducksoftware.integration'
+
+// Detect version
+version = '2.2.0-SNAPSHOT'
+
+apply from: 'airgap.gradle'
+
+// BuildInfo - A json payload usable by detect for information from the build
+JsonBuilder jsonBuilder = new JsonBuilder()
+jsonBuilder { detect version }
+final def buildConfigurationFile = new File("${projectDir}/src/main/resources/buildInfo.json")
+buildConfigurationFile.delete()
+buildConfigurationFile << jsonBuilder.toPrettyString()
+
+// the override.snaphot property should be set to true for a CI build so
+// that the version is omitted from a snapshot build artifact
+if (version.contains('SNAPSHOT') && "true" == project.findProperty('override.snapshot')) {
+    version = 'latest-SNAPSHOT'
+}
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+build {
+    doLast {
+        def shellScriptTemplateFile = new File("${projectDir}/src/main/resources/hub-detect-sh")
+        def shellScriptContents = shellScriptTemplateFile.getText('UTF-8')
+        if (!version.contains('SNAPSHOT')) {
+            String latestReleaseVersion = 'DETECT_LATEST_RELEASE_VERSION=\\${DETECT_LATEST_RELEASE_VERSION:-' + "${version}" + '}\n'
+            shellScriptContents = shellScriptContents.replaceFirst("DETECT_LATEST_RELEASE_VERSION=\\S*\n", latestReleaseVersion)
+            shellScriptTemplateFile.delete()
+            shellScriptTemplateFile << shellScriptContents
+        }
+        def shellScriptFile = new File("${buildDir}/hub-detect.sh")
+        shellScriptFile.delete()
+        shellScriptFile << shellScriptContents
+        shellScriptFile.setExecutable(true)
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+dependencies {
+    compile 'com.blackducksoftware.integration:hub-common:18.3.0'
+    compile 'org.springframework.boot:spring-boot-starter'
+    compile 'org.apache.maven.shared:maven-invoker:3.0.0'
+    compile 'com.esotericsoftware.yamlbeans:yamlbeans:1.11'
+    compile 'com.moandjiezana.toml:toml4j:0.7.1'
+    compile 'org.codehaus.groovy:groovy-all:2.4.11'
+    compile 'org.freemarker:freemarker:2.3.26-incubating'
+
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.7'
+
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
+
+springBoot { mainClass = 'com.blackducksoftware.integration.hub.detect.Application' }
+
+jacocoTestReport {
+    reports { xml.enabled = true }
+}
+
+license {
+    header = file('HEADER')
+    ext.year = Calendar.getInstance().get(Calendar.YEAR)
+    ignoreFailures = true
+    includes (["**/*.groovy", "**/*.java"])
+    excludes ([
+        "/src/test/*.groovy",
+        "src/test/*.java"
+    ])
+}
+
+tasks.licenseMain.dependsOn(licenseFormatMain)
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task customSigning(dependsOn: ['javadocJar', 'sourcesJar']) {
+    doLast {
+        File libDirectory = new File("${buildDir}/libs")
+        File[] jarFiles = libDirectory.listFiles(new FilenameFilter() {
+                    @Override
+                    boolean accept(File dir, String name) {
+                        if (name.endsWith(".jar")) {
+                            return true
+                        }
+                        return false
+                    }
+                })
+        println "Signing Jar files"
+        signing.sign(jarFiles)
+
+        pom {
+            project {
+                name rootProject.name
+                description rootProject.description
+                url 'https://github.com/blackducksoftware/hub-detect'
+                packaging 'jar'
+                scm {
+                    connection 'scm:git:git://github.com/blackducksoftware/hub-detect.git'
+                    developerConnection 'scm:git:git@github.com:blackducksoftware/hub-detect.git'
+                    url 'https://www.github.com/blackducksoftware/hub-detect'
+                }
+                licenses {
+                    license {
+                        name 'Apache License 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'blackduckoss'
+                        name 'Black Duck OSS'
+                        email 'bdsoss@blackducksoftware.com'
+                        organization 'Black Duck Software, Inc.'
+                        organizationUrl 'http://www.blackducksoftware.com'
+                        roles { role 'developer' }
+                        timezone 'America/New_York'
+                    }
+                }
+            }
+        }.writeTo("${buildDir}/poms/${rootProject.name}-${rootProject.version}.pom")
+        File pomFile = file("${buildDir}/poms/${rootProject.name}-${rootProject.version}.pom")
+        signing.sign(pomFile)
+    }
+}
