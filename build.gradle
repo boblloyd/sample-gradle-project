@@ -54,19 +54,13 @@ repositories {
 
 dependencies {
     compile 'com.blackducksoftware.integration:hub-common:18.3.0'
-    compile 'org.springframework.boot:spring-boot-starter'
     compile 'org.apache.maven.shared:maven-invoker:3.0.0'
     compile 'com.esotericsoftware.yamlbeans:yamlbeans:1.11'
     compile 'com.moandjiezana.toml:toml4j:0.7.1'
     compile 'org.codehaus.groovy:groovy-all:2.4.11'
     compile 'org.freemarker:freemarker:2.3.26-incubating'
-
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.7'
-
-    testCompile 'org.springframework.boot:spring-boot-starter-test'
 }
-
-springBoot { mainClass = 'com.blackducksoftware.integration.hub.detect.Application' }
 
 jacocoTestReport {
     reports { xml.enabled = true }
