@@ -1,1 +1,1 @@
-FROM tomcat:7.0
+FROM alpine:3.6 
